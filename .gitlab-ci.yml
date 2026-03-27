@@ -1,0 +1,18 @@
+stages:
+  - test
+
+e2e-chromium:
+  stage: test
+  image: node:20-bullseye
+  variables:
+    HEADLESS: "true"
+  artifacts:
+    when: on_failure
+    expire_in: 1 week
+    paths:
+      - playwright-report/
+  script:
+    - npm ci
+    - npx playwright install --with-deps chromium
+    - npm test
+

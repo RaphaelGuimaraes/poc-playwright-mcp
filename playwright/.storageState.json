@@ -1,0 +1,15 @@
+{
+  "cookies": [
+    {
+      "name": "OptanonAlertBoxClosed",
+      "value": "2026-03-27T12:49:59.912Z",
+      "domain": ".wendys.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}
