@@ -1,6 +1,7 @@
-const { test, expect } = require('@playwright/test');
+import { test, expect } from '@playwright/test';
+import type { BrowserContext, Page } from '@playwright/test';
 
-async function setCookieToAvoidDisplayingOneTrustBanner(context) {
+async function setCookieToAvoidDisplayingOneTrustBanner(context: BrowserContext) {
   await context.addCookies([
     {
       name: 'OptanonAlertBoxClosed',
@@ -45,7 +46,7 @@ test.beforeEach(async ({ context, page }) => {
   });
 });
 
-async function dismissOneTrustIfPresent(page) {
+async function dismissOneTrustIfPresent(page: Page) {
   const banner = page.locator('#onetrust-banner-sdk');
   const acceptAllButton = page.locator('#onetrust-accept-btn-handler');
 
@@ -55,7 +56,6 @@ async function dismissOneTrustIfPresent(page) {
   if (await banner.isVisible().catch(() => false)) {
     await expect(acceptAllButton).toBeVisible({ timeout: 5000 });
 
-    // Use the known button id directly to avoid selector ambiguity.
     await page.evaluate(() => {
       const acceptAllButton = document.getElementById('onetrust-accept-btn-handler');
       const banner = document.getElementById('onetrust-banner-sdk');
@@ -75,7 +75,19 @@ async function dismissOneTrustIfPresent(page) {
   }
 }
 
-async function continueAsGuest(page) {
+function getZipInput(page: Page) {
+  return page.getByRole('textbox', { name: /City, State, or Zipcode/i }).first();
+}
+
+function getSearchButton(page: Page) {
+  return page.getByRole('button', { name: /^search$/i }).first();
+}
+
+function getAddressOption(page: Page) {
+  return page.getByRole('button', { name: /6850 HOSPITAL DRIVE/i }).first();
+}
+
+async function continueAsGuest(page: Page) {
   // Start from a clean state each time.
   await page.goto('/us/en/sign-in', { waitUntil: 'domcontentloaded' });
   await dismissOneTrustIfPresent(page);
@@ -88,21 +100,6 @@ async function continueAsGuest(page) {
 
   await dismissOneTrustIfPresent(page);
   await expect(getZipInput(page)).toBeVisible({ timeout: 15000 });
-}
-
-function getZipInput(page) {
-  // Accessibility label on this screen is "City, State, or Zipcode".
-  return page.getByRole('textbox', { name: /City, State, or Zipcode/i }).first();
-}
-
-function getSearchButton(page) {
-  return page.getByRole('button', { name: /^search$/i }).first();
-}
-
-function getAddressOption(page) {
-  // There can be multiple matching elements (results list + map marker).
-  // `.first()` avoids strict-mode issues; we also click with `force` in the test.
-  return page.getByRole('button', { name: /6850 HOSPITAL DRIVE/i }).first();
 }
 
 test('Continue as Guest navigates to guest flow', async ({ page }) => {
@@ -121,9 +118,7 @@ test('Guest flow shows validation when submitting with empty/invalid ZIP', async
   await test.step('Validation: empty ZIP', async () => {
     await zipInput.fill('');
     await submitButton.click();
-    await expect(
-      page.getByText(/please enter an address, city, state, or zip code/i),
-    ).toBeVisible();
+    await expect(page.getByText(/please enter an address, city, state, or zip code/i)).toBeVisible();
   });
 
   await test.step('Validation: invalid ZIP', async () => {
@@ -145,7 +140,6 @@ test('Guest flow fills ZIP=43017 and selects 6850 Hospital Drive', async ({ page
   // Address selection: click with force because an overlay may intercept clicks.
   await getAddressOption(page).click({ force: true });
 
-  // Assert the selected restaurant appears.
   await expect(page.getByRole('heading', { name: /6850 HOSPITAL DRIVE/i }).first()).toBeVisible();
   await expect(page.getByRole('button', { name: /order here/i }).first()).toBeVisible();
 });
