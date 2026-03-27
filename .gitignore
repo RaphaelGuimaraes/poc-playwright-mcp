@@ -1,0 +1,12 @@
+# IDEs
+.cursor
+
+# Node.js
+node_modules
+
+# Playwright
+playwright-report
+test-results
+
+# Logs
+*.log
